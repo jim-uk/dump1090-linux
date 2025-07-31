@@ -29,6 +29,8 @@
 //
 
 #include "dump1090.h"
+
+
 //
 // ===================== Mode S detection and decoding  ===================
 //
@@ -838,6 +840,8 @@ void decodeModesMessage(struct modesMessage *mm, unsigned char *msg) {
     memcpy(mm->msg, msg, MODES_LONG_MSG_BYTES);
     msg = mm->msg;
 
+    mm->category_valid = 0;
+
     // Get the message type ASAP as other operations depend on this
     mm->msgtype         = msg[0] >> 3; // Downlink Format
     mm->msgbits         = modesMessageLenByType(mm->msgtype);
@@ -985,6 +989,10 @@ void decodeModesMessage(struct modesMessage *mm, unsigned char *msg) {
             mm->flight[4] = ais_charset[chars & 0x3F];
 
             mm->flight[8] = '\0';
+
+            //msg subtype 1,2,3,4 also include category information - decode  //added by JT
+            mm->category_valid = 1;
+            mm->category =((0x0E - mm->metype) << 4) | mm->mesub;
 
         } else if (metype == 19) { // Airborne Velocity Message
 
@@ -1284,6 +1292,8 @@ void displayModesMessage(struct modesMessage *mm) {
         if (mm->metype >= 1 && mm->metype <= 4) { // Aircraft identification
             printf("    Aircraft Type  : %c%d\n", ('A' + 4 - mm->metype), mm->mesub);
             printf("    Identification : %s\n", mm->flight);
+            printf("    Category Valid : %d\n", mm->category_valid);  //added by JT
+            printf("    Category : %d\n", mm->category); //added by JT
 
         } else if (mm->metype == 19) { // Airborne Velocity
             if (mm->mesub == 1 || mm->mesub == 2) {
@@ -2199,3 +2209,53 @@ int decodeCPRrelative(struct aircraft *a, int fflag, int surface) {
 //
 // ===================== Mode S detection and decoding  ===================
 //
+
+
+
+// Extract some bits (firstbit .. lastbit inclusive) from a message. - //added by JT
+int getbits(unsigned char *data, unsigned firstbit, unsigned lastbit)
+{
+    unsigned fbi = firstbit - 1;
+    unsigned lbi = lastbit - 1;
+    unsigned nbi = (lastbit - firstbit + 1);
+
+    unsigned fby = fbi >> 3;
+    unsigned lby = lbi >> 3;
+    unsigned nby = (lby - fby) + 1;
+
+    unsigned shift = 7 - (lbi & 7);
+    unsigned topmask = 0xFF >> (fbi & 7);
+
+    //assert (fbi <= lbi);
+    //assert (nbi <= 32);
+    //assert (nby <= 5);
+
+    if (nby == 5) {
+        return
+            ((data[fby] & topmask) << (32 - shift)) |
+            (data[fby + 1] << (24 - shift)) |
+            (data[fby + 2] << (16 - shift)) |
+            (data[fby + 3] << (8 - shift)) |
+            (data[fby + 4] >> shift);
+    } else if (nby == 4) {
+        return
+            ((data[fby] & topmask) << (24 - shift)) |
+            (data[fby + 1] << (16 - shift)) |
+            (data[fby + 2] << (8 - shift)) |
+            (data[fby + 3] >> shift);
+    } else if (nby == 3) {
+        return
+            ((data[fby] & topmask) << (16 - shift)) |
+            (data[fby + 1] << (8 - shift)) |
+            (data[fby + 2] >> shift);
+    } else if (nby == 2) {
+        return
+            ((data[fby] & topmask) << (8 - shift)) |
+            (data[fby + 1] >> shift);
+    } else if (nby == 1) {
+        return
+            (data[fby] & topmask) >> shift;
+    } else {
+        return 0;
+    }
+}

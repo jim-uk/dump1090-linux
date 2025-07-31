@@ -29,6 +29,9 @@
 //
 #include "coaa.h"
 #include "dump1090.h"
+
+struct stModes Modes; struct stDF tDF;
+
 //
 // ============================= Utility functions ==========================
 //
@@ -641,6 +644,29 @@ int verbose_device_search(char *s)
 			device, rtlsdr_get_device_name((uint32_t)device));
 		return device;
 	}
+     /* does string prefix match a product */
+     //added by JT
+    for (i = 0; i < device_count; i++) {
+        rtlsdr_get_device_usb_strings(i, vendor, product, serial);
+        if (strncmp(s, product, strlen(s)) != 0) {
+            continue;
+        }
+        device = i;
+        fprintf(stderr, "Using device %d: %s\n",
+            device, rtlsdr_get_device_name((uint32_t)device));
+        return device;
+    }
+    /* does string prefix match a vendor */
+    for (i = 0; i < device_count; i++) {
+        rtlsdr_get_device_usb_strings(i, vendor, product, serial);
+        if (strncmp(s, vendor, strlen(s)) != 0) {
+            continue;
+        }
+        device = i;
+        fprintf(stderr, "Using device %d: %s\n",
+            device, rtlsdr_get_device_name((uint32_t)device));
+        return device;
+    }
 	/* does string suffix match a serial */
 	for (i = 0; i < device_count; i++) {
 		rtlsdr_get_device_usb_strings(i, vendor, product, serial);

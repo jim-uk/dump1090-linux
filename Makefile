@@ -4,6 +4,8 @@
 #
 PROGNAME=dump1090
 
+PREFIX=/usr/local
+
 ifdef PREFIX
 BINDIR=$(PREFIX)/bin
 SHAREDIR=$(PREFIX)/share/$(PROGNAME)

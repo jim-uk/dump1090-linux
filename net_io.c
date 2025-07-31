@@ -458,6 +458,16 @@ void modesSendSBSOutput(struct modesMessage *mm) {
         p += sprintf(p, ",");
     }
 
+    //Field 23 - category flag, if available - added by JT
+    if (mm->category_valid) {
+        p += sprintf(p,",%02X",mm->category);
+    }
+    else {
+        p+= sprintf(p,",");
+    }
+
+
+
     p += sprintf(p, "\r\n");
     modesSendAllClients(Modes.sbsos, msg, p-msg);
 }
