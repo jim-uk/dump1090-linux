@@ -646,27 +646,38 @@ int verbose_device_search(char *s)
 	}
      /* does string prefix match a product */
      //added by JT
-    for (i = 0; i < device_count; i++) {
-        rtlsdr_get_device_usb_strings(i, vendor, product, serial);
-        if (strncmp(s, product, strlen(s)) != 0) {
-            continue;
-        }
-        device = i;
-        fprintf(stderr, "Using device %d: %s\n",
-            device, rtlsdr_get_device_name((uint32_t)device));
-        return device;
-    }
-    /* does string prefix match a vendor */
-    for (i = 0; i < device_count; i++) {
-        rtlsdr_get_device_usb_strings(i, vendor, product, serial);
-        if (strncmp(s, vendor, strlen(s)) != 0) {
-            continue;
-        }
-        device = i;
-        fprintf(stderr, "Using device %d: %s\n",
-            device, rtlsdr_get_device_name((uint32_t)device));
-        return device;
-    }
+    /* does string exact match a vendor */
+	for (i = 0; i < device_count; i++) {
+		if (rtlsdr_get_device_usb_strings(i, vendor, product, serial) == 0) {
+
+			//fprintf(stderr, "Checking for Vendor: %s, id: %d vendor: %s product: %s\n", s,i, vendor, product);
+
+			if (strcmp(s, vendor) == 0) {
+				device = i;
+				fprintf(stdout, "Using device %d: %s\n",
+				device, rtlsdr_get_device_name((uint32_t)device));
+				return device;
+			}
+		}
+	}
+
+	/* does string exact match a product */
+	vendor[0]='\0';product[0]='\0';serial[0]='\0';
+	for (i = 0; i < device_count; i++) {
+		if (rtlsdr_get_device_usb_strings(i, vendor, product, serial) == 0) {
+
+			//fprintf(stderr, "Checking for Product: %s, id: %d vendor: %s product: %s\n", s,i, vendor, product);
+
+			if (strcmp(s, product) == 0) {
+
+				device = i;
+				fprintf(stdout, "Using device %d: %s\n",
+				device, rtlsdr_get_device_name((uint32_t)device));
+				return device;
+			}
+
+		}
+	}
 	/* does string suffix match a serial */
 	for (i = 0; i < device_count; i++) {
 		rtlsdr_get_device_usb_strings(i, vendor, product, serial);
