@@ -64,7 +64,7 @@ int getTermRows() { return MODES_INTERACTIVE_ROWS;}
 //
 // =============================== Initialization ===========================
 //
-void modesInitConfig(void) {
+void modesInitConfig(void) { 
     // Default everything to zero/NULL
     memset(&Modes, 0, sizeof(Modes));
 
@@ -408,6 +408,8 @@ void showHelp(void) {
 "--interactive-ttl <sec>  Remove from list if idle for <sec> (default: 60)\n"
 "--interactive-rtl1090    Display flight table in RTL1090 format\n"
 "--raw                    Show only messages hex values\n"
+"--bsb                    Show BSB Values\n"
+"--displaydecode          Show Decoded Information\n"
 "--net                    Enable networking\n"
 "--modeac                 Enable decoding of SSR Modes 3/A & 3/C\n"
 "--net-beast              TCP raw output in Beast binary format\n"
@@ -728,6 +730,10 @@ int main(int argc, char **argv) {
             Modes.phase_enhance = 1;
         } else if (!strcmp(argv[j],"--raw")) {
             Modes.raw = 1;
+        }else if (!strcmp(argv[j], "--bsb")) {
+            Modes.bsb = 1;
+        }else if (!strcmp(argv[j], "--displaydecode")) {
+            Modes.displaydecode = 1;
         } else if (!strcmp(argv[j],"--net")) {
             Modes.net = 1;
         } else if (!strcmp(argv[j],"--modeac")) {

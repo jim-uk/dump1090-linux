@@ -846,6 +846,7 @@ void decodeModesMessage(struct modesMessage *mm, unsigned char *msg) {
     mm->msgtype         = msg[0] >> 3; // Downlink Format
     mm->msgbits         = modesMessageLenByType(mm->msgtype);
     mm->crc             = modesChecksum(msg, mm->msgbits);
+ 
 
     if ((mm->crc) && (Modes.nfix_crc) && ((mm->msgtype == 17) || (mm->msgtype == 18))) {
 //  if ((mm->crc) && (Modes.nfix_crc) && ((mm->msgtype == 11) || (mm->msgtype == 17))) {
@@ -1161,21 +1162,23 @@ void displayModesMessage(struct modesMessage *mm) {
     }
 
     // Show the raw message.
-    if (Modes.mlat && mm->timestampMsg) {
-        printf("@");
-        pTimeStamp = (unsigned char *) &mm->timestampMsg;
-        for (j=5; j>=0;j--) {
-            printf("%02X",pTimeStamp[j]);
-        } 
-    } else
-        printf("*");
+    if (Modes.raw){
+        if (Modes.mlat && mm->timestampMsg) {
+            printf("@");
+            pTimeStamp = (unsigned char *) &mm->timestampMsg;
+            for (j=5; j>=0;j--) {
+                printf("%02X",pTimeStamp[j]);
+            } 
+        } else
+            printf("*");
+    
+        for (j = 0; j < mm->msgbits/8; j++) printf("%02x", mm->msg[j]);
+        printf(";\n");
+    }
 
-    for (j = 0; j < mm->msgbits/8; j++) printf("%02x", mm->msg[j]);
-    printf(";\n");
-
-    if (Modes.raw) {
+    if (!Modes.displaydecode && (Modes.raw || Modes.bsb)) {
         fflush(stdout); // Provide data to the reader ASAP
-        return;         // Enough for --raw mode
+        return;         // Enough for --raw or --bsb mode mode
     }
 
     if (mm->msgtype < 32)
@@ -1802,6 +1805,9 @@ void detectModeS(uint16_t *m, uint32_t mlen) {
             mm.signalLevel = ((sigStrength < 255) ? sigStrength : 255);
             mm.phase_corrected = use_correction;
 
+            //intialise the vert_rate is this seems to be unitalised anywhere....
+            mm.vert_rate=0;
+
             // Decode the received message
             decodeModesMessage(&mm, msg);
 
@@ -1948,7 +1954,7 @@ void useModesMessage(struct modesMessage *mm) {
         }
 
         // Feed output clients
-        if (Modes.net) {modesQueueOutput(mm);}
+        if (Modes.net || Modes.bsb) {modesQueueOutput(mm);}
 
         // Heartbeat not required whilst we're seeing real messages
         Modes.net_heartbeat_count = 0;

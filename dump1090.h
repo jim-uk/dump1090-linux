@@ -37,7 +37,7 @@
 // MinorVer changes when additional features are added, but not for bug fixes (range 00-99)
 // DayDate & Year changes for all changes, including for bug fixes. It represent the release date of the update
 //
-#define MODES_DUMP1090_VERSION     "1.10.3010.14"
+#define MODES_DUMP1090_VERSION     "1.10.3010.14-custom-JT"
 
 // ============================= Include files ==========================
 
@@ -290,6 +290,8 @@ struct stModes{                             // Internal state
     int   nfix_crc;                  // Number of crc bit error(s) to correct
     int   check_crc;                 // Only display messages with good CRC
     int   raw;                       // Raw output format
+    int   bsb;                       // Enable BSB output on the commandline (can be used with raw too)
+    int   displaydecode;                    // Display decoded information to the comamndline
     int   beast;                     // Beast binary format output
     int   mode_ac;                   // Enable decoding of SSR Modes A & C
     int   debug;                     // Debugging mode
