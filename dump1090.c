@@ -608,6 +608,9 @@ int verbose_device_search(char *s)
 	int i, device_count, device, offset;
 	char *s2;
 	char vendor[256], product[256], serial[256];
+    if (strlen(s)>0){
+        fprintf(stderr, "Searching for device: %s\n", s);      
+    }
 	device_count = rtlsdr_get_device_count();
 	if (!device_count) {
 		fprintf(stderr, "No supported devices found.\n");
@@ -619,10 +622,22 @@ int verbose_device_search(char *s)
 		fprintf(stderr, "  %d:  %s, %s, SN: %s\n", i, vendor, product, serial);
 	}
 	fprintf(stderr, "\n");
+    /* does string prefix match a serial */
+    /* serial number 000000001 also looks like 1, so lets to a serial string compare before convert to an integer and checking for a device index */
+	for (i = 0; i < device_count; i++) {
+		rtlsdr_get_device_usb_strings(i, vendor, product, serial);
+		if (strncmp(s, serial, strlen(s)) != 0) {
+			continue;}
+		device = i;
+		fprintf(stderr, "Serial Prefix: Using device %d: %s\n",
+			device, rtlsdr_get_device_name((uint32_t)device));
+		return device;
+	}
+
 	/* does string look like raw id number */
 	device = (int)strtol(s, &s2, 0);
 	if (s2[0] == '\0' && device >= 0 && device < device_count) {
-		fprintf(stderr, "Using device %d: %s\n",
+		fprintf(stderr, "ID: Using device %d: %s\n",
 			device, rtlsdr_get_device_name((uint32_t)device));
 		return device;
 	}
@@ -632,20 +647,11 @@ int verbose_device_search(char *s)
 		if (strcmp(s, serial) != 0) {
 			continue;}
 		device = i;
-		fprintf(stderr, "Using device %d: %s\n",
+		fprintf(stderr, "Serial: Using device %d: %s\n",
 			device, rtlsdr_get_device_name((uint32_t)device));
 		return device;
 	}
-	/* does string prefix match a serial */
-	for (i = 0; i < device_count; i++) {
-		rtlsdr_get_device_usb_strings(i, vendor, product, serial);
-		if (strncmp(s, serial, strlen(s)) != 0) {
-			continue;}
-		device = i;
-		fprintf(stderr, "Using device %d: %s\n",
-			device, rtlsdr_get_device_name((uint32_t)device));
-		return device;
-	}
+
      /* does string prefix match a product */
      //added by JT
     /* does string exact match a vendor */
@@ -656,7 +662,7 @@ int verbose_device_search(char *s)
 
 			if (strcmp(s, vendor) == 0) {
 				device = i;
-				fprintf(stdout, "Using device %d: %s\n",
+				fprintf(stdout, "Vendor: Using device %d: %s\n",
 				device, rtlsdr_get_device_name((uint32_t)device));
 				return device;
 			}
